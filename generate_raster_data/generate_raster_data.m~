@@ -16,11 +16,14 @@ filePath = [pwd '/../data_files/' filename '.mat'];
 xRF = -139; % This needs to be set
 yRF = -3; % This needs to be set
 
+% Set the base x-eCode and y-eCode
+base_x_eCode
+
 % Set the RF eCodes
-xRF_eCode = 15000 + xRF;
-opp_xRF_eCode = 15000 - xRF;
-xRF_eCode = 15000 + xRF;
-opp_xRF_eCode = 15000 - xRF;
+xRF_eCode       = 15000 + xRF;
+opp_xRF_eCode   = 15000 - xRF;
+yRF_eCode       = 15600 + yRF;
+opp_yRF_eCode   = 15600 - yRF;
 
 % Load the data
 dataStructure = load(filePath);
@@ -108,15 +111,18 @@ for i = 1:nTrials
     % Check if the target is in the receptive field, and add it to
     % rasterData
     
+    %Degubbing
+    disp(['trial ' num2str(currentTrial) ': x=' num2str(sum(currentTrial_data(:,2) == xRF_eCode)) '; y=' num2str(sum(currentTrial_data(:,2) == yRF_eCode))]);
+    
     % If the target was in the RF
-    if (sum(ismember(currentTrial_data(:,2),xRF_eCode)) == 1)
+    if (sum(currentTrial_data(:,2) == xRF_eCode) == 1) && (sum(currentTrial_data(:,2) == yRF_eCode) == 1)
         rasterData(currentTrial).TGinRF = 1;
     % Else if the target was opposite to RF
-    elseif (sum(ismember(currentTrial_data(:,2),xRF_eCode)) == 1)
-        rasterData(currentTrial).TGinRF = 0;
+    elseif (sum(ismember(currentTrial_data(:,2),opp_xRF_eCode)) > 0) && (sum(ismember(currentTrial_data(:,2),opp_yRF_eCode)) > 0)
+        rasterData(currentTrial).TGinRF = -1;
     % Else the trial was aborted
     else
-        rasterData(currentTrial).TGinRF = 2;
+        rasterData(currentTrial).TGinRF = 0;
     end
     
     % For loop that goes through all the channels

@@ -2,25 +2,47 @@
 % 
 % Instructions:
 % (1) Fill in the filename (without the '.nev' file extension)
-% (2) Run the file
+% (2) Fill in all other parameters
+% (3) Run the file
 
 
 % Clear the workspace
 clear;
 
+%----------------------------------%
+%------ Set parameters begin ------%
+%----------------------------------%
+
+
+
 % Set the filename
 filename = '151102Pierre001';
-filePath = [pwd '/../data_files/' filename '.mat'];
 
 % Set the receptive field neurons
-xRF = -139; % This needs to be set
-yRF = -3; % This needs to be set
+xRF = -139; 
+yRF = -3; 
+
+% Set the base x-eCode and y-eCode
+base_x_eCode = 15000;
+base_y_eCode = 15600;
+
+% Set the eCode for the coherences
+posEvd = [0, 6, 10, 20];
+negEvd = [0, 0, 0, 0];
+
+
+%----------------------------------%
+%------- Set parameters end -------%
+%----------------------------------%
 
 % Set the RF eCodes
-xRF_eCode       = 15000 + xRF;
-opp_xRF_eCode   = 15000 - xRF;
-yRF_eCode       = 15000 + yRF;
-opp_yRF_eCode   = 15000 - yRF;
+xRF_eCode       = base_x_eCode + xRF;
+opp_xRF_eCode   = base_x_eCode - xRF;
+yRF_eCode       = base_y_eCode + yRF;
+opp_yRF_eCode   = base_y_eCode - yRF;
+
+% Set the filePath
+filePath = [pwd '/../data_files/' filename '.mat'];
 
 % Load the data
 dataStructure = load(filePath);
@@ -28,9 +50,11 @@ data = dataStructure.data; % data is sorted by time
 
 % Find the rows (indices) where the channel is 0
 % Channel 0 is a marker for eCodes in the second column of 'data'
+%[this might be unnecessary]
 channel0_rows = find(data(:,1) == 0);
 
-% Extract the eCodes rows into a matrix
+% Extract the eCodes rows into a matrix 
+%[this might be unnecessary]
 eCode_data = data(channel0_rows, :);
 
 % Get the unique channels in a vector
@@ -102,21 +126,24 @@ for i = 1:nTrials
     rasterData(currentTrial).RAMPOFFCD      =   currentTrial_data(currentTrial_data(:,2)==7001, 3) - startTrial_time;
     rasterData(currentTrial).RAMPSPCD       =   currentTrial_data(currentTrial_data(:,2)==7002, 3) - startTrial_time;
     
-    
+    % Extract the condition
     
     
     % Check if the target is in the receptive field, and add it to
     % rasterData
     
+    %Degubbing
+    disp(['trial ' num2str(currentTrial) ': x=' num2str(sum(currentTrial_data(:,2) == xRF_eCode)) '; y=' num2str(sum(currentTrial_data(:,2) == yRF_eCode))]);
+    
     % If the target was in the RF
-    if (sum(ismember(currentTrial_data(:,2),xRF_eCode)) > 0) && (sum(ismember(currentTrial_data(:,2),yRF_eCode)) > 0)
+    if (sum(currentTrial_data(:,2) == xRF_eCode) == 1) && (sum(currentTrial_data(:,2) == yRF_eCode) == 1)
         rasterData(currentTrial).TGinRF = 1;
     % Else if the target was opposite to RF
     elseif (sum(ismember(currentTrial_data(:,2),opp_xRF_eCode)) > 0) && (sum(ismember(currentTrial_data(:,2),opp_yRF_eCode)) > 0)
-        rasterData(currentTrial).TGinRF = 0;
+        rasterData(currentTrial).TGinRF = -1;
     % Else the trial was aborted
     else
-        rasterData(currentTrial).TGinRF = 2;
+        rasterData(currentTrial).TGinRF = 0;
     end
     
     % For loop that goes through all the channels
