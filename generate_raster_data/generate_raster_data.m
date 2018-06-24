@@ -22,13 +22,17 @@ filename = '151102Pierre001';
 xRF = -139; 
 yRF = -3; 
 
-% Set the base x-eCode and y-eCode
-base_x_eCode = 15000;
-base_y_eCode = 15600;
+% Set the base xRF-eCode and yRF-eCode
+base_xRF_eCode = 15000;
+base_yRF_eCode = 15600;
 
 % Set the eCode for the coherences
 posEvd = [0, 6, 10, 20];
 negEvd = [0, 0, 0, 0];
+
+% Set the base coherence eCode
+base_posEvd_eCode = 14000;
+base_negEvd_eCode = 14500;
 
 
 %----------------------------------%
@@ -36,13 +40,17 @@ negEvd = [0, 0, 0, 0];
 %----------------------------------%
 
 % Set the RF eCodes
-xRF_eCode       = base_x_eCode + xRF;
-opp_xRF_eCode   = base_x_eCode - xRF;
-yRF_eCode       = base_y_eCode + yRF;
-opp_yRF_eCode   = base_y_eCode - yRF;
+xRF_eCode       = base_xRF_eCode + xRF;
+opp_xRF_eCode   = base_xRF_eCode - xRF;
+yRF_eCode       = base_yRF_eCode + yRF;
+opp_yRF_eCode   = base_yRF_eCode - yRF;
+
+% Set the coherence eCodes
+posEvd_eCodes = posEvd + base_posEvd_eCode;
+negEvd_eCodes = negEvd + base_negEvd_eCode;
 
 % Set the filePath
-filePath = [pwd '/../data_files/' filename '.mat'];
+filePath = [pwd '/../data_files/' filename '_fromNev.mat'];
 
 % Load the data
 dataStructure = load(filePath);
@@ -71,6 +79,10 @@ startIndices = find(data(:,2) == 1001);
 
 % Declare our rasterData structure array
 rasterData = {};
+    
+%-----------------------------------%
+%--- Loop through all the trials ---%
+%-----------------------------------%
 
 % For loop that goes through all the trials
 for i = 1:nTrials
@@ -133,18 +145,43 @@ for i = 1:nTrials
     % rasterData
     
     %Degubbing
-    disp(['trial ' num2str(currentTrial) ': x=' num2str(sum(currentTrial_data(:,2) == xRF_eCode)) '; y=' num2str(sum(currentTrial_data(:,2) == yRF_eCode))]);
+    %disp(['trial ' num2str(currentTrial) ': x=' num2str(sum(currentTrial_data(:,2) == xRF_eCode)) '; y=' num2str(sum(currentTrial_data(:,2) == yRF_eCode))]);
+    
+    % --- Check if target was in RF, opposite RF, or trial is aborted ---
     
     % If the target was in the RF
     if (sum(currentTrial_data(:,2) == xRF_eCode) == 1) && (sum(currentTrial_data(:,2) == yRF_eCode) == 1)
         rasterData(currentTrial).TGinRF = 1;
     % Else if the target was opposite to RF
-    elseif (sum(ismember(currentTrial_data(:,2),opp_xRF_eCode)) > 0) && (sum(ismember(currentTrial_data(:,2),opp_yRF_eCode)) > 0)
+    elseif (sum(currentTrial_data(:,2) == opp_xRF_eCode) == 1) && (sum(currentTrial_data(:,2) == opp_yRF_eCode) == 1)
         rasterData(currentTrial).TGinRF = -1;
     % Else the trial was aborted
     else
         rasterData(currentTrial).TGinRF = 0;
     end
+    
+    % --- Get the coherences for positive and negative evidence fo this trial ---
+    
+    % For loop that loops through the positive and negative evidence arrays
+    % to check if this trial corresponds to that coherence
+    for j = 1:length(posEvd_eCodes)
+        
+        % Get the current posEvd_eCode and negEvd_eCodeto compare
+        current_posEvd_eCode = posEvd_eCodes(j);
+        current_negEvd_eCode = negEvd_eCodes(j);
+        
+        % If the current trial contains both the eCodes, then we log it 
+        % into the structure array
+        if(sum(currentTrial_data(:,2) == current_posEvd_eCode) == 1) &&(sum(currentTrial_data(:,2) == current_negEvd_eCode) == 1)
+            rasterData(currentTrial).posEvd = posEvd(j);
+            rasterData(currentTrial).negEvd = negEvd(j);
+        end
+        
+    end % End of for loop
+    
+    %-------------------------------------%
+    %--- Loop through all the channels ---%
+    %-------------------------------------%
     
     % For loop that goes through all the channels
     for j = 1:length(unique_channels)
@@ -158,6 +195,10 @@ for i = 1:nTrials
         % Get the unique units for this channel
         unique_units = unique(currentChannel_data(:,2));
         
+        %----------------------------------%
+        %--- Loop through all the units ---%
+        %----------------------------------%
+    
         % For loop that goes through all the units in this channel
         for k = 1:length(unique_units)
             
@@ -180,76 +221,7 @@ for i = 1:nTrials
     
 end % End of currentTrial (i) for loop
 
-
- 
-% 
-% % For loop that goes through each unique channel
-% for i = 1:length(unique_channels)
-%     
-%     % Load in the currentChannel for easy handling
-%     currentChannel = unique_channels(i);
-%     
-%     % Get the data of the current channel
-%     currentChannel_data = data(data(:,1) == currentChannel, :);
-%     
-%     % Get the units in this channel (unique function sorts implicitly)
-%     unique_units = unique(currentChannel_data(:,2));
-%     
-%     % For loop that goes through each unit in this channel
-%     for j = 1:length(unique_units)
-%         
-%         % Load in the currentUnit for easy handling
-%         currentUnit = unique_units(j);
-%         
-%         % Get the data of the current units
-%         currentUnit_data = currentChannel_data(currentChannel_data(:,2) == currentUnit, :);
-%         
-%         % Concatenate the eCode data to the currentUnit data and sort by
-%         % time (i.e. chronological order)
-%         currentUnit_with_eCode_data = sortrows([currentUnit_data; eCode_data], 3);
-%         
-%         % Get the total spikes for this unit
-%         currentUnit_totalSpikes = size(currentUnit_data, 1);
-%         
-%         % ---- This stuff below is from the individual
-%         % extract_raster_data_RFtest.m file -------
-%         
-%         xRF = '';
-%         yRF = '';
-%         
-%         % Find the indices of currentUnit data when the trial starts
-%         currentUnit_trialStart_indices = find(currentUnit_with_eCode_data(:,2) == 1001); 
-%         
-%         % Preallocate the cell array to hold currentUnit trial data
-%         currentUnit_trials_cellArray = cell(nTrials, 1);
-%         
-%         % Separate the trials and store each trial data in a cell array
-%         % element
-%         for k = 1:nTrials
-%             
-%             % Define the start and end indices for each trial
-%             startIndex = currentUnit_trialStart_indices(k);
-%             
-%             % Define the end index depending on whether it is the last
-%             % trial
-%             if(k < nTrials)
-%                 endIndex = currentUnit_trialStart_indices(k+1) - 1;
-%             else
-%                 endIndex = size(currentUnit_with_eCode_data, 1);
-%             end
-%             
-%             % Store the trial data into a cell in the cell array
-%             currentUnit_trials_cellArray{k,1} = currentUnit_with_eCode_data(startIndex:endIndex, :);
-%             
-%         end % For loop to make trials
-%         
-%     end % End of for loop that goes through each unit in this channel
-%     
-%     
-%     
-% end % End of for loop that goes through each unique channel
-
-
-
-
-
+% Save the raster data
+savingFilename = [filename '_rasterData.mat']; % Name of file
+savingPath = [pwd '/../data_files']; % Location to save the file in
+save([savingPath '/' savingFilename], 'rasterData'); % Save the file

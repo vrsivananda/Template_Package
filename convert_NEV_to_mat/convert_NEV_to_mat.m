@@ -19,6 +19,6 @@ addpath('../data_files');
 data = NEV_reader(['../data_files/' fullFilename]);
 
 % Save the data
-savingFilename = [filename '.mat']; % Name of file
+savingFilename = [filename '_fromNev.mat']; % Name of file
 savingPath = [pwd '/../data_files']; % Location to save the file in
 save([savingPath '/' savingFilename], 'data'); % Save the file
