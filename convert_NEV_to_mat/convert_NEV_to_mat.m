@@ -9,7 +9,7 @@
 clear;
 
 % Set the NEV file name (to be read)
-filename = '151102Pierre001';
+filename = 'SP170126R';
 fullFilename = [filename '.nev'];
 
 % Add path to the data files
