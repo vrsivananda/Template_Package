@@ -145,7 +145,7 @@ for i = 1:length(rasterData)
                 
                 % If the current coherence does not exist yet, then we
                 % create the field
-                if(~isfield(alignedData, currentCoherenceField))
+                if(~isfield(alignedData.(alignmentField), currentCoherenceField))
                     alignedData.(alignmentField).(currentCoherenceField) = [];
                 end
                 
