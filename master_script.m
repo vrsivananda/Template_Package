@@ -121,10 +121,6 @@ if(run_x4_alignedData_to_plot)
    x4_alignedData_to_plot(filename); 
 end
 
-
-
-
-
 %----------------------------------------------------%
 %                   Run Scripts End                  %
 %----------------------------------------------------%
