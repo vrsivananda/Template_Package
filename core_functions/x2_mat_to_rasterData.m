@@ -31,7 +31,7 @@ function x2_mat_to_rasterData(filename, eCodes_fields_entries)
     startIndices = find(data(:,2) == 1001);
 
     % Declare our rasterData structure array
-    rasterData = {};
+    rasterData = struct();
 
     %-----------------------------------%
     %--- Loop through all the trials ---%

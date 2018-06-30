@@ -1,4 +1,4 @@
-function x3_rasterData_to_alignedData(filename, coherences, RF_Field, RF, alignmentBuffer, alignment_parameters, error_fields, sigma)
+function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, alignment_parameters, error_fields, sigma)
     
     % This file takes in the rasterData and processes it to be ready to be
     % plotted
@@ -42,6 +42,7 @@ function x3_rasterData_to_alignedData(filename, coherences, RF_Field, RF, alignm
             % If this trial has an error, then set the flag to skip this trial
             if(rasterData(currentTrial).(error_fields{j}))
                 skipTrial = 1;
+                break;
             end % End of if
         end % End of error_fields for loop (j)
 
@@ -99,7 +100,8 @@ function x3_rasterData_to_alignedData(filename, coherences, RF_Field, RF, alignm
                     alignedData.(alignmentField).(currentCoherenceField).alignmentStart = alignmentStart;
                     alignedData.(alignmentField).(currentCoherenceField).alignmentBuffer = alignmentBuffer;
 
-                    % Calculate the length of the current alignment
+                    % Calculate the length of the current alignment array,
+                    % including the buffer on both ends
                     alignmentLength = alignmentEnd - alignmentStart + (2*alignmentBuffer);
 
                     % Get the alignment time for the current alignment field
@@ -107,14 +109,13 @@ function x3_rasterData_to_alignedData(filename, coherences, RF_Field, RF, alignm
 
                     % Align the times to the alignmentField time,
                     % convert to milliseconds, and round to nearest millisecond
-                    aligned_spikeTimes = ceil((currentUnit_spikeTimes - alignmentTime - currentTrial_startTime) * 1000);
+                    aligned_spikeTimes = ceil((currentUnit_spikeTimes - (alignmentTime + currentTrial_startTime)) * 1000);
 
                     % Truncate the aligned spike time data to the window that
                     % we want
                     aligned_spikeTimes = aligned_spikeTimes(...
                                             (aligned_spikeTimes > (alignmentStart-alignmentBuffer)) &...
                                             (aligned_spikeTimes < (alignmentEnd+alignmentBuffer)));
-
 
                     % Subtract the start time and add the buffer to fit it into
                     % our array

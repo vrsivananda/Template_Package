@@ -5,9 +5,9 @@
 clear;
 
 % Data switches
-run_x1_nev_to_mat                = 0;
-run_x2_mat_to_rasterData         = 0;
-run_x3_rasterData_to_alignedData = 0;
+run_x1_nev_to_mat                = 1;
+run_x2_mat_to_rasterData         = 1;
+run_x3_rasterData_to_alignedData = 1;
 run_x4_alignedData_to_plot       = 1;
 
 %----------------------------------------------------%
@@ -32,7 +32,7 @@ eCodes_fields_entries = {...
     4101, 'Coherence', 36 ...
     4102, 'Coherence', 24 ...
     4103, 'Coherence', 17 ...
-    4104, 'Coherence', 1 ...
+    4104, 'Coherence', 10 ...
     4105, 'Coherence', 5 ...
     4106, 'Coherence', 0 ...
     7000, 'ChoiceTargetOn', 'time' ...
@@ -48,9 +48,6 @@ eCodes_fields_entries = {...
 
 
 % --------- x3_rasterData_to_alignedData --------- %
-
-% Coherences (Must be whole number - NOT be decimal)
-coherences = [50, 36, 24, 17, 10, 05, 0];
 
 % The receptive field
 RF_Field = 'ChoiceTarget';
@@ -83,7 +80,7 @@ sigma = 0.01;
 
 % --------- x4_alignedData_to_plot --------- %
 
-
+% No additional parameters
 
 
 
@@ -116,12 +113,12 @@ end
 
 % x3
 if(run_x3_rasterData_to_alignedData)
-   x3_rasterData_to_alignedData(filename, coherences, RF_Field, RF, alignmentBuffer, alignment_parameters, error_fields, sigma); 
+   x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, alignment_parameters, error_fields, sigma); 
 end
 
 % x4
 if(run_x4_alignedData_to_plot)
-   x4_alignedData_to_plot(filename, alignment_parameters); 
+   x4_alignedData_to_plot(filename); 
 end
 
 

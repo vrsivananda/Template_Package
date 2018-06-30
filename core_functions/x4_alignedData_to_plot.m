@@ -1,4 +1,4 @@
-function x4_alignedData_to_plot(filename, alignment_parameters)
+function x4_alignedData_to_plot(filename)
 
     % This file takes in the rasterData and processes it to be ready to be
     % plotted
