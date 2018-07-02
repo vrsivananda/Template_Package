@@ -106,6 +106,13 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
 
                     % Get the alignment time for the current alignment field
                     alignmentTime = rasterData(currentTrial).(alignmentField);
+                    
+                    % If there is no alignmentTime, then we skip this trial
+                    % Sometimes the last trial ends abrubtly before an 
+                    % error is thrown
+                    if(isempty(alignmentTime))
+                        continue;
+                    end
 
                     % Align the times to the alignmentField time,
                     % convert to milliseconds, and round to nearest millisecond
