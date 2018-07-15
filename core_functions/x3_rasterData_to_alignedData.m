@@ -18,7 +18,7 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
     % Declare a struct for the data
     alignedData = struct();
 
-    % For loop that goes through each trial
+    % For loop that goes through each trial and populates the aligned data
     for i = 1:length(rasterData)
 
         % Load in the current trial
@@ -26,17 +26,10 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
 
         % Get the trial start time
         currentTrial_startTime = rasterData(currentTrial).ENABLECD;
-
-        % Load in the choice target location
-       if(strcmp(rasterData(currentTrial).(RF_Field), RF))
-           RF_field = 'inRF';
-       else 
-           RF_field = 'notInRF';
-       end
-
+        
         % Reset the flag to not skip this trial
         skipTrial = 0;
-
+        
         % For loop that loops through the error cell array and checks for an error
         for j = 1:length(error_fields)
             % If this trial has an error, then set the flag to skip this trial
@@ -45,10 +38,24 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
                 break;
             end % End of if
         end % End of error_fields for loop (j)
-
+        
         % Skip the trial if need be
         if(skipTrial)
             continue;
+        end
+
+        % Check if the target was in the receptive field
+        if(rasterData(currentTrial).inRF == 1)
+            RF_field = 'inRF';
+        elseif(rasterData(currentTrial).inRF == 0)
+            RF_field = 'notInRF';
+        % Else if we were unable to determine if it was in RF, then we just
+        % continue to the next trial
+        elseif(isempty(rasterData(currentTrial).inRF))
+            continue;
+        % Else throw the error
+        else
+            error('Unable to determine if inRF');
         end
 
         % Load in the current coherence
@@ -72,7 +79,7 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
                 % Load in the current unit
                 currentUnit = unique_units{k};
 
-                % If the currenUnit is 0, then we ignore the data and move on
+                % If the currentUnit is 0, then we ignore the data and move on
                 % to the next unit
                 if (currentUnit == 'unit0')
                     continue;
@@ -116,7 +123,7 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
 
                     % Align the times to the alignmentField time,
                     % convert to milliseconds, and round to nearest millisecond
-                    aligned_spikeTimes = ceil((currentUnit_spikeTimes - (alignmentTime + currentTrial_startTime)) * 1000);
+                    aligned_spikeTimes = ceil((currentUnit_spikeTimes - (currentTrial_startTime + alignmentTime)) * 1000);
 
                     % Truncate the aligned spike time data to the window that
                     % we want
@@ -125,7 +132,7 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
                                             (aligned_spikeTimes < (alignmentEnd+alignmentBuffer)));
 
                     % Subtract the start time and add the buffer to fit it into
-                    % our array
+                    % our array (i.e. make them all positive)
                     aligned_spikeTimes = aligned_spikeTimes - alignmentStart + alignmentBuffer; 
 
                     % Set up the array of values that we are interested in

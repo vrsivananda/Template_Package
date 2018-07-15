@@ -1,4 +1,4 @@
-function x2_mat_to_rasterData(filename, eCodes_fields_entries)
+function x2_mat_to_rasterData(filename, eCodes_fields_entries, RF_Field, RF)
 
     % This file takes the .mat file and generates the raster data from the file
 
@@ -67,9 +67,8 @@ function x2_mat_to_rasterData(filename, eCodes_fields_entries)
         rasterData(currentTrial).ENABLECD = startTrial_time;
 
 
-
-        % For loop that goes through the currentTrial_data to extract the
-        % information
+        % For loop that goes through the different eCodes to extract the
+        % data for each eCode in this trial
         for j = 1:3:length(eCodes_fields_entries)
 
             % Get the current eCode
@@ -90,42 +89,7 @@ function x2_mat_to_rasterData(filename, eCodes_fields_entries)
             end
 
         end % End of for loop
-
-
-        %Degubbing
-        %disp(['trial ' num2str(currentTrial) ': x=' num2str(sum(currentTrial_data(:,2) == xRF_eCode)) '; y=' num2str(sum(currentTrial_data(:,2) == yRF_eCode))]);
-
-        % --- Check if target was in RF, opposite RF, or trial is aborted ---
-
-    %     % If the target was in the RF
-    %     if (sum(currentTrial_data(:,2) == xRF_eCode) == 1) && (sum(currentTrial_data(:,2) == yRF_eCode) == 1)
-    %         rasterData(currentTrial).TGinRF = 1;
-    %     % Else if the target was opposite to RF
-    %     elseif (sum(currentTrial_data(:,2) == opp_xRF_eCode) == 1) && (sum(currentTrial_data(:,2) == opp_yRF_eCode) == 1)
-    %         rasterData(currentTrial).TGinRF = -1;
-    %     % Else the trial was aborted
-    %     else
-    %         rasterData(currentTrial).TGinRF = 0;
-    %     end
-
-    %     % --- Get the coherences for positive and negative evidence fo this trial ---
-    %     
-    %     % For loop that loops through the positive and negative evidence arrays
-    %     % to check if this trial corresponds to that coherence
-    %     for j = 1:length(posEvd_eCodes)
-    %         
-    %         % Get the current posEvd_eCode and negEvd_eCodeto compare
-    %         current_posEvd_eCode = posEvd_eCodes(j);
-    %         current_negEvd_eCode = negEvd_eCodes(j);
-    %         
-    %         % If the current trial contains both the eCodes, then we log it 
-    %         % into the structure array
-    %         if(sum(currentTrial_data(:,2) == current_posEvd_eCode) == 1) &&(sum(currentTrial_data(:,2) == current_negEvd_eCode) == 1)
-    %             rasterData(currentTrial).posEvd = posEvd(j);
-    %             rasterData(currentTrial).negEvd = negEvd(j);
-    %         end
-    %         
-    %     end % End of for loop
+        
 
         %-------------------------------------%
         %--- Loop through all the channels ---%
@@ -166,6 +130,20 @@ function x2_mat_to_rasterData(filename, eCodes_fields_entries)
             end % End of currentUnit (k) for loop
 
         end % End of currentChannel (j) for loop
+        
+        % If the column to determine the receptive field exists in this
+        % trial, then we check if it is in the receptive fiend
+        if(isfield(rasterData, RF_Field) && ~isempty(rasterData(currentTrial).(RF_Field)))
+            
+            % If this trial is in the receptive field, then we add it to the
+            % rasterData
+            if(strcmp(rasterData(currentTrial).(RF_Field), RF))
+                rasterData(currentTrial).inRF = 1;
+            else 
+                rasterData(currentTrial).inRF = 0;
+            end
+            
+        end
 
     end % End of currentTrial (i) for loop
 
