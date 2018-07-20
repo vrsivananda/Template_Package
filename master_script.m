@@ -5,8 +5,8 @@
 clear;
 
 % Data switches
-run_x1_nev_to_mat                = 0;
-run_x2_mat_to_rasterData         = 0;
+run_x1_nev_to_mat                = 1;
+run_x2_mat_to_rasterData         = 1;
 run_x3_rasterData_to_alignedData = 1;
 run_x4_alignedData_to_plot       = 1;
 
@@ -17,8 +17,8 @@ run_x4_alignedData_to_plot       = 1;
 % --------- x1_nev_to_mat --------- %
 
 % Place the filename here without any extensions
-filename = 'datafile003';
-
+%filename = 'datafile003';
+filename = 'SP170126B';
 
 % --------- x2_mat_to_rasterData --------- %
 
