@@ -1,4 +1,4 @@
-function x4_alignedData_to_plot(filename)
+function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters)
 
     % This file takes in the rasterData and processes it to be ready to be
     % plotted
@@ -14,90 +14,104 @@ function x4_alignedData_to_plot(filename)
     addpath([pwd '/additional_functions/subplot_tight']);
 
     % ---------- Plot the figure ----------
+    
+    % Get the neurons
+    neurons = fieldnames(alignedData);
 
-    % New figure
-    figure;
+    % For loop that goes through each neuron (each neuron is a
+    % separate plot)
+    for i = 1:length(neurons)
 
-    % Get the alignmentFields
-    alignmentFields = fieldnames(alignedData);
+        % New figure
+        figure;
+        
+        % Get the current neuron
+        currentNeuron = neurons{i};
+        
+        disp('-----------New figure-----------');
+        disp(['Neuron: ' currentNeuron]);
+        
+        % For loop that goes through each alignment field
+        for j = 1:size(alignment_parameters,1) 
+        
+            % Get the current alignment field
+            alignmentField = alignment_parameters{j,1};
+            disp(['alignmentField: ' alignmentField]);
+            
+            % Get the alignment start and end parameter
+            alignmentStart = alignment_parameters{j,2};
+            alignmentEnd = alignment_parameters{j,3};    
 
-    % For loop that goes through each alignmentField (each subplot)
-    for i = 1:numel(alignmentFields)
-
-        % Prep the subplot
-        subplot_tight(1,numel(alignmentFields),i);
-
-        % Load in the alignmentField
-        alignmentField = alignmentFields{i};
-
-        % Get the coherences
-        coherences = fieldnames(alignedData.(alignmentField));
-
-        % For loop that goes through each coherence
-        for j = 1:numel(coherences)
-
-            % Get the current coherence
-            currentCoherence = coherences{j};
-
-            % Calculate the plotting color for the current coherence
-            coherenceColor = repmat(((j/(numel(coherences))*0.5)), 1, 3);
-
-            % Get the alignmentStart value
-            alignmentStart = alignedData.(alignmentField).(currentCoherence).alignmentStart;
-
-            % Get the alignmentBuffer value
-            alignmentBuffer = alignedData.(alignmentField).(currentCoherence).alignmentBuffer;
-
-            % Create an RF_array to loop through
-            RF_array = {'inRF', 'notInRF'};
-
-            % For loop that goes through each RF
-            for k = 1:numel(RF_array)
-
-                % Get the current RF
-                currentRF = RF_array{k};
+            % Prep the subplot
+            subplot_tight(1,numel(alignment_parameters)/3,j);
+            
+            % Create cell array of RF fields to loop through
+            RF_fields = {'inRF', 'notInRF'};
+            
+            % For loop that goes through each RF field
+            for k = 1:length(RF_fields)
+                
+                % Get the current RF field
+                RF_field = RF_fields{k};
+                disp(['RF_field: ' RF_field]);
 
                 % Determine the lineStyle depending on inRF or not
-                if(strcmp(currentRF, 'inRF'))
+                if(strcmp(RF_field, 'inRF'))
                    lineStyle =  '-';
-                elseif(strcmp(currentRF, 'notInRF'))
+                elseif(strcmp(RF_field, 'notInRF'))
                     lineStyle = '--';
                 end
+                
+                % Get the list of coherences in a cell array
+                coherences = fieldnames(alignedData.(currentNeuron).(alignmentField).(RF_field));
+                
+                % For loop that goes through each coherence field
+                for l = 1:length(coherences)
+                    
+                    % Get the current coherence
+                    currentCoherence = coherences{l};
+                    disp(['currentCoherence: ' currentCoherence]);
 
-                % Get the average summed convolution data
-                avg_summed_conv = alignedData.(alignmentField).(currentCoherence).(currentRF).avg_summed_conv;
+                    % Calculate the plotting color for the current coherence
+                    coherenceColor = repmat(((l/(length(coherences))*0.5)), 1, 3);
+                    
+                    % Get the data to plot
+                    summedConvolutions = alignedData.(currentNeuron).(alignmentField).(RF_field).(currentCoherence).summedConvolutions;
+                    
+                    % Truncate each end to remove the buffer and get the relevant data
+                    y = summedConvolutions(alignmentBuffer+1:length(summedConvolutions)-alignmentBuffer);
+                    
+                    % Make the x-axis
+                    xRange = alignmentStart:alignmentEnd;
 
-                % Truncate the average summed convolution data for plotting
-                avg_summed_conv = avg_summed_conv(alignmentBuffer:(length(avg_summed_conv)-alignmentBuffer));
+                    % Plot the data
+                    plot(xRange, y, 'linestyle', lineStyle, 'Color', coherenceColor,'linewidth',2);
+                    hold on;
 
-                % Set the x-range
-                xRange = alignmentStart:(alignmentStart + length(avg_summed_conv) - 1);
+                    % Plot the vertical line
+                    plot([0, 0], [0, 3],'k--', 'linewidth', 1);
+                    hold on;
 
-                % Plot the data
-                plot(xRange, avg_summed_conv, 'linestyle', lineStyle, 'Color', coherenceColor,'linewidth',2);
-                hold on;
+                    title(alignmentField);
+                    set(gca,'FontSize',12)
+                    xlim([xRange(1), xRange(end)]);
+                    %ylim([0 3])
 
-                % Plot the vertical line
-                plot([0, 0], [0, 3],'k--', 'linewidth', 1);
-                hold on;
+                    % Only for first subplot
+                    if(j == 1)
+                        ylabel ('Firing rates (spikes / sec)');
+                    % Only for second subplot
+                    elseif(j == 2)
+                        xlabel ('time (msec)');
+                    end
 
-                title(alignmentField);
-                set(gca,'FontSize',12)
-                xlim([xRange(1), xRange(end)]);
-                ylim([0 3])
-
-                % Only for first plot
-                if(i == 1)
-                    ylabel ('Firing rates (spikes / sec)');
-                % Only for second plot
-                elseif(i == 2)
-                    xlabel ('time (msec)');
-                end
-
-            end % End of RF for loop (k)
-
-        end % End of coherences for loop (j)
-
-    end % End of alignmentField (subplot) for loop (i)
+                    
+                end % End of for loop that goes through each coherence (l)
+                
+            end % End of for loop that goes through RF field (k)
+            
+        end % End of for loop that goes through each alignment field
+        
+    end % End of for loop that goes through each neuron (i)
     
 end % End of function
