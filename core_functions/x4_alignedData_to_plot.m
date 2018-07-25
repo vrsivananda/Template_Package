@@ -89,13 +89,13 @@ function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters)
                     hold on;
 
                     % Plot the vertical line
-                    plot([0, 0], [0, 3],'k--', 'linewidth', 1);
+                    plot([0, 0], [0, 100],'k--', 'linewidth', 1);
                     hold on;
 
                     title(alignmentField);
                     set(gca,'FontSize',12)
                     xlim([xRange(1), xRange(end)]);
-                    %ylim([0 3])
+                    ylim([0 100])
 
                     % Only for first subplot
                     if(j == 1)
