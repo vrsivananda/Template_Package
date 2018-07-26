@@ -1,4 +1,4 @@
-function x2_mat_to_rasterData(filename, eCodes_fields_entries, RF_Field, RF)
+function x2_mat_to_rasterData(filename, eCodes_fields_entries, inRF_parameters)
 
     % This file takes the .mat file and generates the raster data from the file
 
@@ -69,20 +69,20 @@ function x2_mat_to_rasterData(filename, eCodes_fields_entries, RF_Field, RF)
 
         % For loop that goes through the different eCodes to extract the
         % data for each eCode in this trial
-        for j = 1:3:length(eCodes_fields_entries)
+        for j = 1:size(eCodes_fields_entries,1)
 
             % Get the current eCode
-            currentECode = eCodes_fields_entries{j};
+            currentECode = eCodes_fields_entries{j,1};
 
             % Get the field
-            currentField = eCodes_fields_entries{j+1};
+            currentField = eCodes_fields_entries{j,2};
 
             % If we want the time that the eCode was dropped
-            if(strcmp(eCodes_fields_entries{j+2},'time'))
+            if(strcmp(eCodes_fields_entries{j,3},'time'))
                 rasterData(currentTrial).(currentField) = currentTrial_data(currentTrial_data(:,2)==currentECode, 3) - startTrial_time;
             % Else if we want another field that we specified
             elseif (sum(currentTrial_data(:,2)==currentECode) == 1)
-                rasterData(currentTrial).(currentField) = eCodes_fields_entries{j+2};        
+                rasterData(currentTrial).(currentField) = eCodes_fields_entries{j,3};        
             % Else the eCode was not dropped on this trial
             else
                 % Deliberately left empty
@@ -131,19 +131,49 @@ function x2_mat_to_rasterData(filename, eCodes_fields_entries, RF_Field, RF)
 
         end % End of currentChannel (j) for loop
         
-        % If the column to determine the receptive field exists in this
-        % trial, then we check if it is in the receptive fiend
-        if(isfield(rasterData, RF_Field) && ~isempty(rasterData(currentTrial).(RF_Field)))
+        % Flag to determine if it was in RF
+        inRF = [];
+        
+        % For loop that checks if this trial has all the info that
+        % matches that required for it to be in the receptive field
+        for j = 1:size(inRF_parameters,1)
             
-            % If this trial is in the receptive field, then we add it to the
-            % rasterData
-            if(strcmp(rasterData(currentTrial).(RF_Field), RF))
-                rasterData(currentTrial).inRF = 1;
-            else 
-                rasterData(currentTrial).inRF = 0;
-            end
+            % Load in the variables for the current loop
+            inRF_field = inRF_parameters{j,1};
+            inRF_info = inRF_parameters{j,2};
             
-        end
+            % If the column to determine the receptive field exists in this
+            % trial, then we check if it is in the receptive field
+            if(isfield(rasterData, inRF_field) && ~isempty(rasterData(currentTrial).(inRF_field)))
+            
+                % Load in the current info
+                current_info = rasterData(currentTrial).(inRF_field);
+                
+                % Check if the current field contains matching info
+                if( (ischar(inRF_info)    && strcmp(current_info, inRF_info)) || ...
+                        (isnumeric(inRF_info) && (current_info == inRF_info)) )
+                    
+                    % If yes, then indicate that that the stimuli was in RF
+                    inRF = 1;
+                    
+                else
+                    % Else it was not in RF
+                    inRF = 0;
+                    break; % Break out of for loop
+                    
+                end % End of inner if that checks for matching info
+            
+            % Else if the field necessary to determine inRF does not exist,
+            % then we break out of the loop
+            else
+                inRF = [];
+                break;
+            end % End if that checks for field existence
+            
+        end % End of inRF_parameters for loop (j)
+        
+        % Load it into the rasterData
+        rasterData(currentTrial).inRF = inRF;
 
     end % End of currentTrial (i) for loop
 

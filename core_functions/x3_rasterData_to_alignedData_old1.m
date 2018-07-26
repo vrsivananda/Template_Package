@@ -277,12 +277,21 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
                 end % End of neuron for loop (l)
 
             end % End of RF_array for loop (k)
+    
+            % Order the fields by ASCII values
+            alignedData.(alignmentField).(currentCoherence) = orderfields(alignedData.(alignmentField).(currentCoherence));
 
         end % End of coherences for loop (j)
+    
+        % Order the fields by ASCII values
+        alignedData.(alignmentField) = orderfields(alignedData.(alignmentField));
 
     end % End of alignmentFields for loop
+    
+    % Order the fields by ASCII values
+    alignedData = orderfields(alignedData);
 
-    % Save the raster data
+    % Save the aligned data
     savingFilename = [filename '_alignedData.mat']; % Name of file
     savingPath = [pwd '/data_files']; % Location to save the file in
     save([savingPath '/' savingFilename], 'alignedData'); % Save the file

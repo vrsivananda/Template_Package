@@ -1,4 +1,4 @@
-function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters)
+function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters, yMax, saveFigure)
 
     % This file takes in the rasterData and processes it to be ready to be
     % plotted
@@ -22,21 +22,22 @@ function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters)
     % separate plot)
     for i = 1:length(neurons)
 
-        % New figure
-        figure;
+        % Make a new figure that is fullscreen
+        figure('units','normalized','outerposition',[0 0 1 1]);
         
         % Get the current neuron
         currentNeuron = neurons{i};
         
-        disp('-----------New figure-----------');
-        disp(['Neuron: ' currentNeuron]);
+        disp('---------------------------------------------');
+        disp(currentNeuron);
         
         % For loop that goes through each alignment field
         for j = 1:size(alignment_parameters,1) 
         
             % Get the current alignment field
             alignmentField = alignment_parameters{j,1};
-            disp(['alignmentField: ' alignmentField]);
+            disp('---------------------');
+            disp(alignmentField);
             
             % Get the alignment start and end parameter
             alignmentStart = alignment_parameters{j,2};
@@ -53,7 +54,8 @@ function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters)
                 
                 % Get the current RF field
                 RF_field = RF_fields{k};
-                disp(['RF_field: ' RF_field]);
+                disp('-----------');
+                disp(RF_field);
 
                 % Determine the lineStyle depending on inRF or not
                 if(strcmp(RF_field, 'inRF'))
@@ -61,6 +63,9 @@ function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters)
                 elseif(strcmp(RF_field, 'notInRF'))
                     lineStyle = '--';
                 end
+                
+                % Order the coherences
+                alignedData.(currentNeuron).(alignmentField).(RF_field) = orderfields(alignedData.(currentNeuron).(alignmentField).(RF_field));
                 
                 % Get the list of coherences in a cell array
                 coherences = fieldnames(alignedData.(currentNeuron).(alignmentField).(RF_field));
@@ -70,10 +75,10 @@ function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters)
                     
                     % Get the current coherence
                     currentCoherence = coherences{l};
-                    disp(['currentCoherence: ' currentCoherence]);
+                    disp(currentCoherence);
 
                     % Calculate the plotting color for the current coherence
-                    coherenceColor = repmat(((l/(length(coherences))*0.5)), 1, 3);
+                    coherenceColor = repmat(((1-(l/(length(coherences))))*0.5), 1, 3);
                     
                     % Get the data to plot
                     summedConvolutions = alignedData.(currentNeuron).(alignmentField).(RF_field).(currentCoherence).summedConvolutions;
@@ -89,13 +94,13 @@ function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters)
                     hold on;
 
                     % Plot the vertical line
-                    plot([0, 0], [0, 100],'k--', 'linewidth', 1);
+                    plot([0, 0], [0, yMax],'k--', 'linewidth', 1);
                     hold on;
 
                     title(alignmentField);
                     set(gca,'FontSize',12)
                     xlim([xRange(1), xRange(end)]);
-                    ylim([0 100])
+                    ylim([0 yMax])
 
                     % Only for first subplot
                     if(j == 1)
@@ -104,13 +109,20 @@ function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters)
                     elseif(j == 2)
                         xlabel ('time (msec)');
                     end
-
                     
                 end % End of for loop that goes through each coherence (l)
                 
             end % End of for loop that goes through RF field (k)
             
         end % End of for loop that goes through each alignment field
+        
+        % If we want to save the figure
+        if(saveFigure)
+            % Save the figure for this neuron
+            savingFilename = [currentNeuron '.jpg']; % Name of file
+            savingPath = [pwd '/figures']; % Location to save the file in
+            saveas(gca, fullfile(savingPath, savingFilename), 'jpeg'); % Save the file
+        end
         
     end % End of for loop that goes through each neuron (i)
     

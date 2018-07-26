@@ -1,4 +1,4 @@
-function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, alignment_parameters, error_fields, sigma)
+function x3_rasterData_to_alignedData(filename, alignmentBuffer, alignment_parameters, error_fields, sigma)
     
     % This file takes in the rasterData and processes it to be ready to be
     % plotted
@@ -69,9 +69,16 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
         end
         
         % --- RF check end ---
+        
+        % We need to add a '0' if the coherence is less than 10
+        if(rasterData(currentTrial).Coherence < 10)
+            buffer = '0';
+        else
+            buffer = '';
+        end
 
         % Load in the current coherence
-        currentCoherenceField = ['coherence' num2str(rasterData(currentTrial).Coherence)];
+        currentCoherenceField = ['coherence' buffer num2str(rasterData(currentTrial).Coherence)];
 
         % Get the unique channels in a cell array
         unique_channels = fieldnames(rasterData(currentTrial).spikes);        
@@ -93,7 +100,7 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
 
                 % If the currentUnit is 0, then we ignore the data and move on
                 % to the next unit
-                if (currentUnit == 'unit0')
+                if (strcmp(currentUnit, 'unit0'))
                     continue;
                 end
 
@@ -266,7 +273,7 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
                     alignedData.(currentNeuron).(alignmentField).(RF_field).(currentCoherence).convolvedSpikeTrains = convolutions;
                     
                     % Sum the convolutions
-                    summedConvolutions = mean(convolutions)*1000;
+                    summedConvolutions = mean(convolutions, 1)*1000;
                     %plot(summedConvolutions);
                     %hold on;
                     
@@ -279,9 +286,7 @@ function x3_rasterData_to_alignedData(filename, RF_Field, RF, alignmentBuffer, a
             
         end % End of alignment parameters for loop (j)
             
-    end % End of neuron for loop (i)
-    
-    
+    end % End of neuron for loop (i)    
     
     % Save the raster data
     savingFilename = [filename '_alignedData.mat']; % Name of file
