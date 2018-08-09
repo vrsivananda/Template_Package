@@ -1,4 +1,4 @@
-function x2_mat_to_rasterData(filename, eCodes_fields_entries, inRF_parameters)
+function x2_mat_to_rasterData(filename, eCodes_fields_entries, toRF_parameters)
 
     % This file takes the .mat file and generates the raster data from the file
 
@@ -132,48 +132,49 @@ function x2_mat_to_rasterData(filename, eCodes_fields_entries, inRF_parameters)
         end % End of currentChannel (j) for loop
         
         % Flag to determine if it was in RF
-        inRF = [];
+        toRF = [];
         
         % For loop that checks if this trial has all the info that
         % matches that required for it to be in the receptive field
-        for j = 1:size(inRF_parameters,1)
+        for j = 1:size(toRF_parameters,1)
             
             % Load in the variables for the current loop
-            inRF_field = inRF_parameters{j,1};
-            inRF_info = inRF_parameters{j,2};
+            toRF_field = toRF_parameters{j,1};
+            toRF_info = toRF_parameters{j,2};
             
             % If the column to determine the receptive field exists in this
             % trial, then we check if it is in the receptive field
-            if(isfield(rasterData, inRF_field) && ~isempty(rasterData(currentTrial).(inRF_field)))
+            if(isfield(rasterData, toRF_field) && ~isempty(rasterData(currentTrial).(toRF_field)))
             
                 % Load in the current info
-                current_info = rasterData(currentTrial).(inRF_field);
+                current_info = rasterData(currentTrial).(toRF_field);
                 
                 % Check if the current field contains matching info
-                if( (ischar(inRF_info)    && strcmp(current_info, inRF_info)) || ...
-                        (isnumeric(inRF_info) && (current_info == inRF_info)) )
+                if( (ischar(toRF_info)    && strcmp(current_info, toRF_info)) || ...
+                    (isnumeric(toRF_info) && (current_info == toRF_info)) || ...
+                    (ischar(toRF_info)    && strcmp(toRF_info, 'time')))
                     
                     % If yes, then indicate that that the stimuli was in RF
-                    inRF = 1;
+                    toRF = 1;
                     
                 else
                     % Else it was not in RF
-                    inRF = 0;
+                    toRF = 0;
                     break; % Break out of for loop
                     
                 end % End of inner if that checks for matching info
             
-            % Else if the field necessary to determine inRF does not exist,
+            % Else if the field necessary to determine toRF does not exist,
             % then we break out of the loop
             else
-                inRF = [];
+                toRF = [];
                 break;
             end % End if that checks for field existence
             
-        end % End of inRF_parameters for loop (j)
+        end % End of toRF_parameters for loop (j)
         
         % Load it into the rasterData
-        rasterData(currentTrial).inRF = inRF;
+        rasterData(currentTrial).toRF = toRF;
 
     end % End of currentTrial (i) for loop
 

@@ -55,17 +55,17 @@ function x3_rasterData_to_alignedData(filename, alignmentBuffer, alignment_param
         % --- RF check start ---
 
         % Check if the target was in the receptive field
-        if(rasterData(currentTrial).inRF == 1)
-            RF_field = 'inRF';
-        elseif(rasterData(currentTrial).inRF == 0)
-            RF_field = 'notInRF';
+        if(rasterData(currentTrial).toRF == 1)
+            RF_field = 'toRF';
+        elseif(rasterData(currentTrial).toRF == 0)
+            RF_field = 'awayRF';
         % Else if we were unable to determine if it was in RF, then we just
         % continue to the next trial
-        elseif(isempty(rasterData(currentTrial).inRF))
+        elseif(isempty(rasterData(currentTrial).toRF))
             continue;
         % Else throw the error
         else
-            error('Unable to determine if inRF');
+            error('Unable to determine if toRF');
         end
         
         % --- RF check end ---
@@ -220,7 +220,7 @@ function x3_rasterData_to_alignedData(filename, alignmentBuffer, alignment_param
             alignmentField = alignment_parameters{j,1};
             
             % Create cell array of RF fields to loop through
-            RF_fields = {'inRF', 'notInRF'};
+            RF_fields = {'toRF', 'awayRF'};
             
             % For loop that goes through each RF field
             for k = 1:length(RF_fields)

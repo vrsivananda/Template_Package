@@ -1,4 +1,4 @@
-function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters, yMax, saveFigure)
+function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters, RF_fields_to_plot, yMax, saveFigure)
 
     % This file takes in the rasterData and processes it to be ready to be
     % plotted
@@ -47,7 +47,10 @@ function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters,
             subplot_tight(1,numel(alignment_parameters)/3,j);
             
             % Create cell array of RF fields to loop through
-            RF_fields = {'inRF', 'notInRF'};
+            RF_fields = {'toRF', 'awayRF'};
+            
+            % Create an array for the name
+            nameExtension = '';
             
             % For loop that goes through each RF field
             for k = 1:length(RF_fields)
@@ -56,11 +59,21 @@ function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters,
                 RF_field = RF_fields{k};
                 disp('-----------');
                 disp(RF_field);
+                
+                % If this is not one of the fields to plot, then we skip to
+                % the next iteration
+                if(~any(ismember(RF_fields_to_plot, RF_field)))
+                    disp([RF_field ' is skipped.']);
+                    continue;
+                end
+                
+                % Add in the name extension
+                nameExtension = [nameExtension '_' RF_field];
 
-                % Determine the lineStyle depending on inRF or not
-                if(strcmp(RF_field, 'inRF'))
+                % Determine the lineStyle depending on toRF or not
+                if(strcmp(RF_field, 'toRF'))
                    lineStyle =  '-';
-                elseif(strcmp(RF_field, 'notInRF'))
+                elseif(strcmp(RF_field, 'awayRF'))
                     lineStyle = '--';
                 end
                 
@@ -119,7 +132,7 @@ function x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters,
         % If we want to save the figure
         if(saveFigure)
             % Save the figure for this neuron
-            savingFilename = [currentNeuron '.jpg']; % Name of file
+            savingFilename = [currentNeuron nameExtension '.jpg']; % Name of file
             savingPath = [pwd '/figures']; % Location to save the file in
             saveas(gca, fullfile(savingPath, savingFilename), 'jpeg'); % Save the file
         end

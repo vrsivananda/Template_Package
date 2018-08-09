@@ -1,4 +1,7 @@
-% This script calls all the other scripts
+% This script calls all the other scripts.
+% This script is the control panel where you set all your parameters for
+% the rest of the scripts.
+%
 % Pipeline: nev --> mat --> rasterData --> alignedData --> plot
 
 % Clear the workspace
@@ -6,8 +9,8 @@ clear;
 
 % Data switches
 run_x1_nev_to_mat                = 0;
-run_x2_mat_to_rasterData         = 0;
-run_x3_rasterData_to_alignedData = 0;
+run_x2_mat_to_rasterData         = 1;
+run_x3_rasterData_to_alignedData = 1;
 run_x4_alignedData_to_plot       = 1;
 
 %----------------------------------------------------%
@@ -17,7 +20,6 @@ run_x4_alignedData_to_plot       = 1;
 % --------- x1_nev_to_mat --------- %
 
 % Place the filename here without any extensions
-%filename = 'datafile003';
 filename = 'SP170126B';
 
 % --------- x2_mat_to_rasterData --------- %
@@ -50,8 +52,9 @@ eCodes_fields_entries = {...
 % --------- x3_rasterData_to_alignedData --------- %
 
 % If the field and the inputs match, then it is in the receptive field
-inRF_parameters = {...
-    'ChoiceTarget', 'Right' ...
+toRF_parameters = {...
+    'ChoiceTarget', 'Left'; ...
+    'Reward', 'time' ...
 };
 
 % The buffer (in milliseconds) to place on both sides of the alignment data
@@ -63,7 +66,7 @@ alignmentBuffer = 100;
 alignment_parameters = {
     'ChoiceTargetOn',    -200, 800;...
     'GlassPatternCueOn', -600, 600;...
-    'Saccade',           -600, 300 ...
+    'Saccade',           -600, 600 ...
 };
 
 % The fields which if filled means an error
@@ -81,11 +84,14 @@ sigma = 0.01;
 
 % --------- x4_alignedData_to_plot --------- %
 
+% Cell array of RF fields to plot
+RF_fields_to_plot = {'toRF', 'awayRF'}; % Default: {'toRF', 'awayRF'}
+
 % The maximum y-value for the plots
 yMax = 130;
 
 % Save the figures
-saveFigure = 0;
+saveFigure = 1;
 
 
 
@@ -113,7 +119,7 @@ end
 
 % x2
 if(run_x2_mat_to_rasterData)
-   x2_mat_to_rasterData(filename, eCodes_fields_entries, inRF_parameters); 
+   x2_mat_to_rasterData(filename, eCodes_fields_entries, toRF_parameters); 
 end
 
 % x3
@@ -123,7 +129,7 @@ end
 
 % x4
 if(run_x4_alignedData_to_plot)
-   x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters, yMax, saveFigure); 
+   x4_alignedData_to_plot(filename, alignmentBuffer, alignment_parameters, RF_fields_to_plot, yMax, saveFigure); 
 end
 
 
