@@ -1,0 +1,260 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>robustDiffOneSide</title><meta name="generator" content="MATLAB 8.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-03-22"><meta name="DC.source" content="robustDiffOneSideDocumentation.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>robustDiffOneSide</h1><!--introduction--><p>differentiates using smooth noise-robust one sided differentiation formula</p><pre class="language-matlab">y_dot = robustDiffOneSide(y, dt, N)
+</pre><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Inputs</a></li><li><a href="#2">Outputs</a></li><li><a href="#3">Description</a></li><li><a href="#4">Example</a></li><li><a href="#9">Formula</a></li><li><a href="#14">References</a></li></ul></div><h2>Inputs<a name="1"></a></h2><p>y  - signal/vector to differentiate dt - time or distance between points in y N  - Number of points to use in differentiation.  This value must be      positive integer greater than or equal 2.</p><h2>Outputs<a name="2"></a></h2><p>y_dot - differentiated signal/vector</p><h2>Description<a name="3"></a></h2><p>robustDiffOneSide differentiates a signal/vector numerically using N points before the current point.  Only past information is used to calculate the derivative.  In signal processing, this is called causal. The larger the value of N, the more high frequency noise is suppressed unlike Savitsky-Golay filters and Central Difference methods (see references).  Note that the derivative is not estimated at the beginning of y.  This means that (N-1) points at the beginning y_dot are NaN.  See the example.</p><h2>Example<a name="4"></a></h2><div><ul><li><b>Signal Parameters</b></li></ul></div><pre class="codeinput">sampleRate = 1000; <span class="comment">% Hz</span>
+dt = 1/sampleRate;
+t = 0:dt:1;
+signalFrequency = 40; <span class="comment">% Hz</span>
+noiseMeanFrequency = 350; <span class="comment">% Hz</span>
+noiseMeanAmplitude = 0.2;
+
+<span class="comment">% * *Calculate Signal*</span>
+pureSignal = sin(2*pi*signalFrequency*t);
+</pre><p>Noise has an amplitude range of 75% to 125% of mean amplitude Noise varies in frequency from 90% to 110% of mean frequency Noise has a phase delay of 0.3rad/s</p><pre class="codeinput">noisySignal = sin(2*pi*signalFrequency*t) + noiseMeanAmplitude*(0.75+0.5*rand(size(t))).*cos(2*pi*noiseMeanFrequency*(0.9+0.1*rand(size(t))).*t-0.3);
+</pre><div><ul><li><b>Calculate Derivative</b></li></ul></div><pre class="codeinput">signal_dot = 2*pi*signalFrequency*cos(2*pi*signalFrequency*t);
+
+signal_dot_estimate5 = robustDiffOneSide(noisySignal,dt,5);
+signal_dot_estimate6 = robustDiffOneSide(noisySignal,dt,6);
+signal_dot_estimate9 = robustDiffOneSide(noisySignal,dt,9);
+signal_dot_estimate10 = robustDiffOneSide(noisySignal,dt,10);
+signal_dot_estimate15 = robustDiffOneSide(noisySignal,dt,15);
+signal_dot_estimate21 = robustDiffOneSide(noisySignal,dt,21);
+</pre><div><ul><li><b>Plots Signals and Derivative of Signals</b></li></ul></div><p>Please note the one sided formulas have a significant phase delay.  This means you should take this into account for your signal.</p><pre class="codeinput">subplot(211)
+plot(t,pureSignal,t,noisySignal);
+xlim([0 4/signalFrequency])
+xlabel(<span class="string">'time [sec]'</span>)
+ylabel(<span class="string">'Amplitude'</span>)
+title(<span class="string">'y'</span>)
+legend(<span class="string">'Pure Signal'</span>,<span class="string">'Noisy Signal'</span>);
+
+subplotHandle2 = subplot(212);
+set(subplotHandle2,<span class="string">'Position'</span>,[0.13 0.114285714285714 0.596785714285714 0.33687707641196]);
+plot(t, signal_dot, <span class="keyword">...</span>
+     t, signal_dot_estimate5, <span class="keyword">...</span>
+     t, signal_dot_estimate6, <span class="keyword">...</span>
+     t, signal_dot_estimate9, <span class="keyword">...</span>
+     t, signal_dot_estimate10, <span class="keyword">...</span>
+     t, signal_dot_estimate15, <span class="keyword">...</span>
+     t, signal_dot_estimate21);
+xlim([0 4/signalFrequency])
+xlabel(<span class="string">'time [sec]'</span>)
+ylabel(<span class="string">'Amplitude'</span>)
+title(<span class="string">'y'''</span>)
+legendHandle = legend( <span class="string">'Pure Derivative'</span>, <span class="keyword">...</span>
+                       <span class="string">'N = 5'</span>, <span class="keyword">...</span>
+                       <span class="string">'N = 6'</span>, <span class="keyword">...</span>
+                       <span class="string">'N = 9'</span>, <span class="keyword">...</span>
+                       <span class="string">'N = 10'</span>, <span class="keyword">...</span>
+                       <span class="string">'N = 15'</span>, <span class="keyword">...</span>
+                       <span class="string">'N = 21'</span>);
+set(legendHandle,<span class="keyword">...</span>
+    <span class="string">'Position'</span>,[0.738390216719632 0.123486590038313 0.255357142857143 0.322222222222222]);
+disp([<span class="string">'Please note the one sided formulas have a significant phase delay.  This '</span> <span class="keyword">...</span>
+      <span class="string">'means you should take this into account for your signal.'</span>]);
+</pre><pre class="codeoutput">Please note the one sided formulas have a significant phase delay.  This means you should take this into account for your signal.
+</pre><img vspace="5" hspace="5" src="robustDiffOneSideDocumentation_01.png" alt=""> <h2>Formula<a name="9"></a></h2><p>Both a recursive and non-Recursive method exist to calculate the coefficients used on the formula.  The recurrence is an integer sequence that can be found in The On-line Encyclopedia of Integer Sequences under A008315. Link: <a href="http://oeis.org/A008315">http://oeis.org/A008315</a></p><div><ul><li><b>Recursive Formula</b></li></ul></div><pre class="language-matlab">coefficients = zeros(1,n+1);
+coefficients(1) = 1;
+<span class="keyword">for</span> iRow = 2:n
+    previousCoefficients = coefficients;
+    <span class="keyword">for</span> iColumn = 2:((iRow+1)/2)
+        coefficients(iColumn) = previousCoefficients(iColumn-1) + previousCoefficients(iColumn);
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="comment">% Reflect coefficients about the center of the vector and multiply by -1</span>
+coefficients(ceil((n+1)/2+1):end) = -coefficients(floor((n+1)/2):-1:1);
+</pre><div><ul><li><b>Non-Recursive Formula</b></li></ul></div><pre class="language-matlab">k = 1:(n+1)/2;
+coefficients(1) = 1;
+coefficients(2:ceil((n+1)/2)) = gamma(n)./(gamma(k+1).*gamma(n-k)).*(n-2*k)./(n-k);
+<span class="comment">% Reflect coefficients about the center of the vector and multiply by -1</span>
+coefficients(ceil((n+1)/2+1):end) = -coefficients(floor((n+1)/2):-1:1);
+</pre><h2>References<a name="14"></a></h2><p>This function is based on the formulas by Pavel Holoborodko from his website: <a href="http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/">http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/</a> A big thanks is due to Pavel Holoborodko for developing these formulas.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% robustDiffOneSide
+% differentiates using smooth noise-robust one sided differentiation formula
+%
+%   y_dot = robustDiffOneSide(y, dt, N)
+%
+%% Inputs
+% y  - signal/vector to differentiate
+% dt - time or distance between points in y
+% N  - Number of points to use in differentiation.  This value must be
+%      positive integer greater than or equal 2.
+%
+%% Outputs
+% y_dot - differentiated signal/vector
+%
+%% Description
+% robustDiffOneSide differentiates a signal/vector numerically using N
+% points before the current point.  Only past information is used to
+% calculate the derivative.  In signal processing, this is called causal.
+% The larger the value of N, the more high frequency noise is suppressed
+% unlike Savitsky-Golay filters and Central Difference methods 
+% (see references).  Note that the derivative is not
+% estimated at the beginning of y.  This means that (N-1) points at the
+% beginning y_dot are NaN.  See the example.
+%
+%% Example
+% * *Signal Parameters*
+sampleRate = 1000; % Hz
+dt = 1/sampleRate;
+t = 0:dt:1;
+signalFrequency = 40; % Hz
+noiseMeanFrequency = 350; % Hz
+noiseMeanAmplitude = 0.2;
+
+% * *Calculate Signal*
+pureSignal = sin(2*pi*signalFrequency*t);
+%%
+% Noise has an amplitude range of 75% to 125% of mean amplitude
+% Noise varies in frequency from 90% to 110% of mean frequency
+% Noise has a phase delay of 0.3rad/s
+noisySignal = sin(2*pi*signalFrequency*t) + noiseMeanAmplitude*(0.75+0.5*rand(size(t))).*cos(2*pi*noiseMeanFrequency*(0.9+0.1*rand(size(t))).*t-0.3);
+%%
+% * *Calculate Derivative*
+signal_dot = 2*pi*signalFrequency*cos(2*pi*signalFrequency*t);
+
+signal_dot_estimate5 = robustDiffOneSide(noisySignal,dt,5);
+signal_dot_estimate6 = robustDiffOneSide(noisySignal,dt,6);
+signal_dot_estimate9 = robustDiffOneSide(noisySignal,dt,9);
+signal_dot_estimate10 = robustDiffOneSide(noisySignal,dt,10);
+signal_dot_estimate15 = robustDiffOneSide(noisySignal,dt,15);
+signal_dot_estimate21 = robustDiffOneSide(noisySignal,dt,21);
+%%
+% * *Plots Signals and Derivative of Signals*
+%%
+% Please note the one sided formulas have a significant phase delay.  This
+% means you should take this into account for your signal.
+
+subplot(211)
+plot(t,pureSignal,t,noisySignal);
+xlim([0 4/signalFrequency])
+xlabel('time [sec]')
+ylabel('Amplitude')
+title('y')
+legend('Pure Signal','Noisy Signal');
+
+subplotHandle2 = subplot(212);
+set(subplotHandle2,'Position',[0.13 0.114285714285714 0.596785714285714 0.33687707641196]);
+plot(t, signal_dot, ...
+     t, signal_dot_estimate5, ...
+     t, signal_dot_estimate6, ...
+     t, signal_dot_estimate9, ...
+     t, signal_dot_estimate10, ...
+     t, signal_dot_estimate15, ...
+     t, signal_dot_estimate21);
+xlim([0 4/signalFrequency])
+xlabel('time [sec]')
+ylabel('Amplitude')
+title('y''')
+legendHandle = legend( 'Pure Derivative', ...
+                       'N = 5', ...
+                       'N = 6', ...
+                       'N = 9', ...
+                       'N = 10', ... 
+                       'N = 15', ...
+                       'N = 21');
+set(legendHandle,...
+    'Position',[0.738390216719632 0.123486590038313 0.255357142857143 0.322222222222222]);
+disp(['Please note the one sided formulas have a significant phase delay.  This ' ...
+      'means you should take this into account for your signal.']);
+
+%% Formula
+% Both a recursive and non-Recursive method exist to calculate the
+% coefficients used on the formula.  The recurrence is an integer sequence
+% that can be found in The On-line Encyclopedia of Integer Sequences under
+% A008315. Link: http://oeis.org/A008315
+%%
+% * *Recursive Formula*
+%%
+%   coefficients = zeros(1,n+1);
+%   coefficients(1) = 1;
+%   for iRow = 2:n
+%       previousCoefficients = coefficients;
+%       for iColumn = 2:((iRow+1)/2)
+%           coefficients(iColumn) = previousCoefficients(iColumn-1) + previousCoefficients(iColumn);
+%       end
+%   end
+%   % Reflect coefficients about the center of the vector and multiply by -1
+%   coefficients(ceil((n+1)/2+1):end) = -coefficients(floor((n+1)/2):-1:1);
+%%
+% * *Non-Recursive Formula*
+%%
+%   k = 1:(n+1)/2;
+%   coefficients(1) = 1;
+%   coefficients(2:ceil((n+1)/2)) = gamma(n)./(gamma(k+1).*gamma(n-k)).*(n-2*k)./(n-k);
+%   % Reflect coefficients about the center of the vector and multiply by -1
+%   coefficients(ceil((n+1)/2+1):end) = -coefficients(floor((n+1)/2):-1:1);
+
+%% References
+% This function is based on the formulas by Pavel Holoborodko from his
+% website: http://www.holoborodko.com/pavel/numerical-methods/numerical-derivative/smooth-low-noise-differentiators/
+% A big thanks is due to Pavel Holoborodko for developing these formulas.
+%
+
+##### SOURCE END #####
+--></body></html>

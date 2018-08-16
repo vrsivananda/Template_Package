@@ -26,7 +26,7 @@ filename = 'SP170126B';
 
 % Set the cell array of ecodes, fields, and entries for this specific
 % experiment
-% This is in the form {eCode, field, entry-for-eCode ...}
+% This is in the form {eCode, field, entry-for-eCode; ...}
 eCodes_fields_entries = {...
     4000, 'ChoiceTarget', 'Left'; ...
     4001, 'ChoiceTarget', 'Right'; ...
@@ -114,7 +114,7 @@ addpath([pwd '/data_files']);
 
 % x1
 if(run_x1_nev_to_mat)
-   x1_nev_to_mat(filename); 
+   x1_nev_to_mat(filename);
 end
 
 % x2
