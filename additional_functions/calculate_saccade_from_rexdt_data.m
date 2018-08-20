@@ -1,34 +1,49 @@
 clear;
-% Passed in
+% --- Passed in ---
 filename = 'SP170126B';
+run_rexdt = 0;
 sigma_saccadeSmoothing = 0.001;
 % The window used to calculate the acceleration
 window = 5;
 timeBeforeSaccade = 50;
-timeBeforeSaccade = 100;
+timeAfterSaccade = 100;
 accelerationThreshold = 5000;
+
+% Shorthands:
+% vel = velocity
+% acc = acceleration
+% smo = smoothened
+% uns = unsmoothened
+% sac = saccade
+% ard = around
+% ver = vertical
+% hor = horizontal
 
 % ========================================================= %
 % === PART 1/2: Get the _from_rexdt file from A&E files === %
 % ========================================================= %
 
+% If we want to run rexdt
+if(run_rexdt)
+    
+    % Create a path to the rexdt function
+    addpath([pwd '/rexdt']);
+    
+    % Run rexdt to get the from_rexdt.mat file
+    rexdt([filename 'A']);
+    
+    % Delete the duplicate file from this folder (the actual one labeled iwth
+    % _from_rexdt.mat is in the data_files folder
+    delete([filename '.mat']);
 
-% Create a path to the rexdt function
-addpath([pwd '/rexdt']);
-
-% Run rexdt to get the from_rexdt.mat file
-%rexdt([filename 'A']);
-
-% Delete the duplicate file from this folder (the actual one labeled iwth
-% _from_rexdt.mat is in the data_files folder
-%delete([filename '.mat']);
-
-% Load the file to this workspace
-load([pwd '/../data_files/' filename '_from_rexdt.mat']);
+end
 
 % ================================================================= %
 % === PART 2/2: Calculate the saccade from the _from_rexdt file === %
 % ================================================================= %
+
+% Load the file to this workspace
+load([pwd '/../data_files/' filename '_from_rexdt.mat']);
 
 % Create the kernel for smoothing
 sigmaValues = -sigma_saccadeSmoothing*3:.001:sigma_saccadeSmoothing*3;
@@ -36,7 +51,7 @@ kernel = normpdf(sigmaValues, 0, sigma_saccadeSmoothing) * .001;
 center = ceil(length(sigmaValues)/2); % What is this used for?
 
 % The number of ms per trial in the eye position matrix
-ms_position = size(allh,2);
+ms_positions = size(allh,2);
 
 % For loop that goes through each trial to calculate the acceleration
 for i = 1:rexnumtrials
@@ -47,10 +62,10 @@ for i = 1:rexnumtrials
     horizontal_smoothened = conv(allh(i,:),kernel);
     
     % Prepare for trimming
-    startIndex = ((length(vertical_smoothened)-ms_position)/2) + 1;
+    startIndex = ((length(vertical_smoothened)-ms_positions)/2) + 1;
     % ^ +1 because don't include the first index to match the length of the 
     % original ms once it is paired with endIndex
-    endIndex = startIndex + ms_position - 1;
+    endIndex = startIndex + ms_positions - 1;
     % ^ -1 because we want to rid of the +1 before
     
     % Trim the smoothened data and add it to the matrix
@@ -59,7 +74,7 @@ for i = 1:rexnumtrials
     
     % Add it to the matrix
     
-    % Unsmoothened data (transferring variable names)
+    % Unsmoothened data (merely transferring variable names for easy readability)
     all_vertical_unsmoothened(i,:)   = allv(i,:);
     all_horizontal_unsmoothened(i,:) = allh(i,:);
         
@@ -68,21 +83,21 @@ for i = 1:rexnumtrials
     % ------------------------------ %
     
     % For loop that goes through each ms of the position arrays except the last one
-    for j = 1:(ms_position-1)
+    for j = 1:(ms_positions-1)
         
         %  --- Smoothened ---
         
         % Vertical velocity
         position1 = all_vertical_smoothened(i,j);   % Position of the eye at ms
         position2 = all_vertical_smoothened(i,j+1); % Position of the eye at ms+1
-        current_velocity_vertical = abs(position2 - position1) * 200; % Difference in position *200?
+        current_velocity_vertical = abs(position2 - position1)/(1/1000); % Difference in position *200? (200 implies that the time difference between each cell is 5ms)
         velocity_vertical_smoothened(i,j) = current_velocity_vertical; % Store the velocity
         
         
         % Horizontal velocity
         position1 = all_horizontal_smoothened(i,j);   % Position of the eye at ms
         position2 = all_horizontal_smoothened(i,j+1); % Position of the eye at ms+1
-        current_velocity_horizontal = abs(position2 - position1) * 200; % Difference in position *200?
+        current_velocity_horizontal = abs(position2 - position1)/(1/1000); % Difference in position *200?
         velocity_horizontal_smoothened(i,j) = current_velocity_horizontal;  % Store the velocity
         
         % Diagonal velocity
@@ -94,14 +109,14 @@ for i = 1:rexnumtrials
         % Vertical velocity
         position1 = all_vertical_unsmoothened(i,j);   % Position of the eye at ms
         position2 = all_vertical_unsmoothened(i,j+1); % Position of the eye at ms+1
-        current_velocity_vertical_ = abs(position2 - position1) * 200; % Difference in position *200?
+        current_velocity_vertical_ = abs(position2 - position1)/(1/1000); % Difference in position *200?
         velocity_vertical_smoothened(i,j) = current_velocity_vertical; % Store the velocity
         
         
         % Horizontal velocity
         position1 = all_horizontal_unsmoothened(i,j);   % Position of the eye at ms
         position2 = all_horizontal_unsmoothened(i,j+1); % Position of the eye at ms+1
-        current_velocity_horizontal = abs(position2 - position1) * 200; % Difference in position *200?
+        current_velocity_horizontal = abs(position2 - position1)/(1/1000); % Difference in position *200?
         velocity_horizontal_unsmoothened(i,j) = current_velocity_horizontal;  % Store the velocity
         
         % Diagonal velocity
@@ -115,9 +130,9 @@ for i = 1:rexnumtrials
     % ---------------------------------- %
     
     % The number of ms per trial in the velocity matrix
-    ms_velocity = size(allh,2);
+    ms_velocity = size(allh, 2);
     
-    % For loop that goes through each ms of the velocity arrays except the last one
+    % For loop that goes through each ms of the velocity arrays except the last window size + 1
     for j = 1:(ms_velocity - window - 1) % -1 because we have 1 less ms after calculating acceleration from velocity
         
         %  --- Smoothened ---
@@ -141,35 +156,101 @@ end % End of for loop that goes through each trial (i)
 
 % Get the indices where eCode is 1503 (the code for saccade)
 % The saccade eCode is used as a reference point
-[rows_1503, cols_1503] = find (allcodes ==1503);
+[rows_1503, cols_1503] = find(allcodes == 1503);
+col_1503 = cols_1503(1); % col is constant throughout
 
 % For loop that runs for each saccade (eCode 1503)
-for i = 1:length(rows_1503)
+% Trials without saccade eCodes are skipped
+for i = 1:max(rows_1503)
     
-    % Get the saccade time
-    saccade_eCode_time(i) = alltimes(rows_1503(i), cols_1503(i));
+    % Get the current trial
+    currentTrial = i;
+    
+    % If this trial had a saccade, then proceed to get the time around the
+    % saccade
+    if(ismember(currentTrial, rows_1503))
         
-    %  --- Smoothened ---
-    
-    % Get the velocity around the saccade
-    velocity_around_saccade_smoothened(i,:) = ...
-        velocity_diagonal_smoothened(rows_1503(i),...
-            (saccade_eCode_time(i) - timeBeforeSaccade):(saccade_eCode_time(i) + timeAfterSaccade));
-    % Get the acceleration around the saccade
-    acceleration_around_saccade_smoothened(i,:) = ...
-        acceleration_smoothened(rows_1503(i),...
-            (saccade_eCode_time(i) - timeBeforeSaccade):(saccade_eCode_time(i) + timeAfterSaccade));
+        % Get the saccade time
+        saccade_eCode_time(currentTrial) = alltimes(currentTrial, col_1503);
+
+        %  --- Smoothened ---
         
-    %  --- Unsmoothened ---
-    
-    % Get the velocity around the saccade
-    velocity_around_saccade_unsmoothened(i,:) = ...
-        velocity_diagonal_unsmoothened(rows_1503(i),...
-            (saccade_eCode_time(i) - timeBeforeSaccade):(saccade_eCode_time(i) + timeAfterSaccade));
-    % Get the acceleration around the saccade
-    acceleration_around_saccade_unsmoothened(i,:) = ...
-        acceleration_unsmoothened(rows_1503(i),...
-            (saccade_eCode_time(i) - timeBeforeSaccade):(saccade_eCode_time(i) + timeAfterSaccade));
+        disp(currentTrial);
+
+        % Get the velocity around the saccade
+        velocity_around_saccade_smoothened(currentTrial,:) = ...
+            velocity_diagonal_smoothened(currentTrial,...
+                (saccade_eCode_time(currentTrial) - timeBeforeSaccade):(saccade_eCode_time(currentTrial) + timeAfterSaccade));
+        % Get the acceleration around the saccade
+        acceleration_around_saccade_smoothened(currentTrial,:) = ...
+            acceleration_smoothened(currentTrial,...
+                (saccade_eCode_time(currentTrial) - timeBeforeSaccade):(saccade_eCode_time(currentTrial) + timeAfterSaccade));
+
+        %  --- Unsmoothened ---
+
+        % Get the velocity around the saccade
+        velocity_around_saccade_unsmoothened(currentTrial,:) = ...
+            velocity_diagonal_unsmoothened(currentTrial,...
+                (saccade_eCode_time(currentTrial) - timeBeforeSaccade):(saccade_eCode_time(currentTrial) + timeAfterSaccade));
+        % Get the acceleration around the saccade
+        acceleration_around_saccade_unsmoothened(currentTrial,:) = ...
+            acceleration_unsmoothened(currentTrial,...
+                (saccade_eCode_time(currentTrial) - timeBeforeSaccade):(saccade_eCode_time(currentTrial) + timeAfterSaccade));
+
+    % Else fill it in with NaNs
+    else
+        
+        % Fill in all variables with NaNs
+        saccade_eCode_time(currentTrial) = nan;
+        
+        velocity_around_saccade_smoothened(currentTrial,:)       = nan(1, timeAfterSaccade + timeBeforeSaccade + 1);
+        acceleration_around_saccade_smoothened(currentTrial,:)   = nan(1, timeAfterSaccade + timeBeforeSaccade + 1);
+        velocity_around_saccade_unsmoothened(currentTrial,:)     = nan(1, timeAfterSaccade + timeBeforeSaccade + 1);
+        acceleration_around_saccade_unsmoothened(currentTrial,:) = nan(1, timeAfterSaccade + timeBeforeSaccade + 1);
+        
+    end % End of if(ismember(currentTrial, rows_1503))
     
     
 end % End of for loop that runs for each saccade (i)
+        
+%  --- Smoothened ---
+
+% Replace the accelerations below the threshold with NaN
+cells_above_threshold = acceleration_smoothened > accelerationThreshold; % Logical matrix
+acceleration_thresholded_smoothened = nan(size(acceleration_smoothened));
+acceleration_thresholded_smoothened(cells_above_threshold) = acceleration_smoothened(cells_above_threshold);
+
+% Find the first instance of a saccade for each trial (row)
+logical_index = acceleration_around_saccade_smoothened > accelerationThreshold;
+first_index_logical = (cumsum(logical_index,2) == 1) & logical_index; % Only the first element that crosses the threshold is 1
+first_saccade_time_smoothened = sum(first_index_logical.*acceleration_around_saccade_smoothened, 2); % Only the first element that crosses threshold is multiplied by 1, others are mulitplied by 0
+
+
+%  --- Unsmoothened ---
+
+% Replace the accelerations below the threshold with NaN
+cells_above_threshold = acceleration_unsmoothened > accelerationThreshold; % Logical matrix
+acceleration_thresholded_unsmoothened = nan(size(acceleration_unsmoothened));
+acceleration_thresholded_unsmoothened(cells_above_threshold) = acceleration_unsmoothened(cells_above_threshold);
+
+% Find the first instance of a saccade for each trial (row)
+logical_index = acceleration_around_saccade_unsmoothened > accelerationThreshold;
+first_index_logical = (cumsum(logical_index,2) == 1) & logical_index; % Only the first element that crosses the threshold is 1
+first_saccade_time_unsmoothened = sum(first_index_logical.*acceleration_around_saccade_unsmoothened, 2); % Only the first element that crosses threshold is multiplied by 1, others are mulitplied by 0
+
+
+    
+    
+    
+    
+    
+
+
+
+
+
+
+
+
+
+
