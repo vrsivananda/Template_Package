@@ -4,7 +4,8 @@ filename = 'SP170126B';
 run_rexdt = 0;
 sigma_saccadeSmoothing = 0.001;
 % The window used to calculate the acceleration
-window = 5;
+acceleration_window = 5;
+velocity_window = 1;
 timeBeforeSaccade = 50;
 timeAfterSaccade = 100;
 accelerationThreshold = 5000;
@@ -52,6 +53,40 @@ center = ceil(length(sigmaValues)/2); % What is this used for?
 
 % The number of ms per trial in the eye position matrix
 ms_positions = size(allh,2);
+
+
+
+% Unsmoothened data (merely transferring variable names for easy readability)
+all_vertical_positions   = allv;
+all_horizontal_positions = allh;
+
+% Calculate the velocities
+all_vertical_velocity   = abs(...
+                            all_vertical_positions(:,1+velocity_window:end) -...
+                            all_vertical_positions(:,1:end-velocity_window)...
+                          )/(velocity_window/1000);
+all_horizontal_velocity = abs(...
+                            all_horizontal_positions(:,1+velocity_window:end) -...
+                            all_horizontal_positions(:,1:end-velocity_window)...
+                          )/(velocity_window/1000);
+all_diagonal_velocity = sqrt(...
+                            (all_vertical_velocity.^2) +...
+                            (all_horizontal_velocity.^2)...
+                        );
+
+% Calculate the accelerations
+all_accelerations = abs(...
+                      all_diagonal_velocity(:,1+acceleration_window:end) -...
+                      all_diagonal_velocity(:,1:end-acceleration_window)...
+                    )/(acceleration_window/1000);
+
+% Get the logical matrix to index out the 1503 eCode times and get the
+% column of the first instance
+[dummyValue, col_1503] = find((allcodes == 1503), 1, 'first');
+times_1503 = alltimes(:,col_1503);
+
+% Below this line is old code
+%----------------------------------------------------------
 
 % For loop that goes through each trial to calculate the acceleration
 for i = 1:rexnumtrials
@@ -104,24 +139,6 @@ for i = 1:rexnumtrials
         velocity_diagonal_smoothened(i,j)= sqrt((current_velocity_vertical^2) + (current_velocity_horizontal^2));
         
         
-        %  --- Unsmoothened ---
-        
-        % Vertical velocity
-        position1 = all_vertical_unsmoothened(i,j);   % Position of the eye at ms
-        position2 = all_vertical_unsmoothened(i,j+1); % Position of the eye at ms+1
-        current_velocity_vertical_ = abs(position2 - position1)/(1/1000); % Difference in position *200?
-        velocity_vertical_smoothened(i,j) = current_velocity_vertical; % Store the velocity
-        
-        
-        % Horizontal velocity
-        position1 = all_horizontal_unsmoothened(i,j);   % Position of the eye at ms
-        position2 = all_horizontal_unsmoothened(i,j+1); % Position of the eye at ms+1
-        current_velocity_horizontal = abs(position2 - position1)/(1/1000); % Difference in position *200?
-        velocity_horizontal_unsmoothened(i,j) = current_velocity_horizontal;  % Store the velocity
-        
-        % Diagonal velocity
-        velocity_diagonal_unsmoothened(i,j)= sqrt((current_velocity_vertical^2) + (current_velocity_horizontal^2));
-        
     end % End of for loop that goes through each ms of the position arrays (j)
     
     
@@ -133,21 +150,15 @@ for i = 1:rexnumtrials
     ms_velocity = size(allh, 2);
     
     % For loop that goes through each ms of the velocity arrays except the last window size + 1
-    for j = 1:(ms_velocity - window - 1) % -1 because we have 1 less ms after calculating acceleration from velocity
+    for j = 1:(ms_velocity - acceleration_window - 1) % -1 because we have 1 less ms after calculating acceleration from velocity
         
         %  --- Smoothened ---
         
         velocity1 = velocity_diagonal_smoothened(i,j);        % Velocity at ms
-        velocity2 = velocity_diagonal_smoothened(i,j+window); % Velocity at ms + window
-        current_acceleration = abs(velocity2 - velocity1)/(window/1000); % Difference in velocity/time window
+        velocity2 = velocity_diagonal_smoothened(i,j+acceleration_window); % Velocity at ms + window
+        current_acceleration = abs(velocity2 - velocity1)/(acceleration_window/1000); % Difference in velocity/time window
         acceleration_smoothened(i,j) = current_acceleration; % Store the acceleration
         
-        %  --- Unsmoothened ---
-        
-        velocity1 = velocity_diagonal_unsmoothened(i,j);        % Velocity at ms
-        velocity2 = velocity_diagonal_unsmoothened(i,j+window); % Velocity at ms + window
-        current_acceleration = abs(velocity2 - velocity1)/(window/1000); % Difference in velocity/time window
-        acceleration_unsmoothened(i,j) = current_acceleration; % Store the acceleration
         
     end % End of for loop that goes through each ms of the velocity arrays (j)
 
@@ -186,17 +197,6 @@ for i = 1:max(rows_1503)
             acceleration_smoothened(currentTrial,...
                 (saccade_eCode_time(currentTrial) - timeBeforeSaccade):(saccade_eCode_time(currentTrial) + timeAfterSaccade));
 
-        %  --- Unsmoothened ---
-
-        % Get the velocity around the saccade
-        velocity_around_saccade_unsmoothened(currentTrial,:) = ...
-            velocity_diagonal_unsmoothened(currentTrial,...
-                (saccade_eCode_time(currentTrial) - timeBeforeSaccade):(saccade_eCode_time(currentTrial) + timeAfterSaccade));
-        % Get the acceleration around the saccade
-        acceleration_around_saccade_unsmoothened(currentTrial,:) = ...
-            acceleration_unsmoothened(currentTrial,...
-                (saccade_eCode_time(currentTrial) - timeBeforeSaccade):(saccade_eCode_time(currentTrial) + timeAfterSaccade));
-
     % Else fill it in with NaNs
     else
         
@@ -225,21 +225,6 @@ logical_index = acceleration_around_saccade_smoothened > accelerationThreshold;
 first_index_logical = (cumsum(logical_index,2) == 1) & logical_index; % Only the first element that crosses the threshold is 1
 first_saccade_time_smoothened = sum(first_index_logical.*acceleration_around_saccade_smoothened, 2); % Only the first element that crosses threshold is multiplied by 1, others are mulitplied by 0
 
-
-%  --- Unsmoothened ---
-
-% Replace the accelerations below the threshold with NaN
-cells_above_threshold = acceleration_unsmoothened > accelerationThreshold; % Logical matrix
-acceleration_thresholded_unsmoothened = nan(size(acceleration_unsmoothened));
-acceleration_thresholded_unsmoothened(cells_above_threshold) = acceleration_unsmoothened(cells_above_threshold);
-
-% Find the first instance of a saccade for each trial (row)
-logical_index = acceleration_around_saccade_unsmoothened > accelerationThreshold;
-first_index_logical = (cumsum(logical_index,2) == 1) & logical_index; % Only the first element that crosses the threshold is 1
-first_saccade_time_unsmoothened = sum(first_index_logical.*acceleration_around_saccade_unsmoothened, 2); % Only the first element that crosses threshold is multiplied by 1, others are mulitplied by 0
-
-
-    
     
     
     
