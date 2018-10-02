@@ -54,8 +54,6 @@ center = ceil(length(sigmaValues)/2); % What is this used for?
 % The number of ms per trial in the eye position matrix
 ms_positions = size(allh,2);
 
-
-
 % Unsmoothened data (merely transferring variable names for easy readability)
 all_vertical_positions   = allv;
 all_horizontal_positions = allh;
@@ -84,6 +82,34 @@ all_accelerations = abs(...
 % column of the first instance
 [dummyValue, col_1503] = find((allcodes == 1503), 1, 'first');
 times_1503 = alltimes(:,col_1503);
+% Replace all 0s with NaNs
+times_1503(times_1503 == 0) = NaN;
+
+% Create matrix of ms to index out the times 
+timeIndices = repmat(times_1503, 1, timeBeforeSaccade + timeAfterSaccade + 1) + ...
+              repmat(-timeBeforeSaccade:timeAfterSaccade, size(times_1503,1), 1);
+          
+% Create a linear index for indexing
+linearIndices = (timeIndices-1).*(size(timeIndices,1))+...
+                (repmat([1:size(timeIndices,1)]',1,size(timeIndices,2)));
+            
+% Replace all NaNs with 1s for indexing to work
+linearIndices(isnan(linearIndices)) = 1;
+            
+% Index out the acceleration around the saccade from all_accelerations
+acceleration_around_saccade = all_accelerations(linearIndices);
+
+% Put back the NaNs
+acceleration_around_saccade(acceleration_around_saccade == all_accelerations(1)) = NaN;
+
+% Find the first instance of an acceleration above the threshold
+condition = bsxfun(@gt,acceleration_around_saccade, accelerationThreshold); % Define the condition
+[ok, maxIndices] = max(condition, [], 2); % Get the max indices of each row
+C = ok.*acceleration_around_saccade((1:numel(maxIndices))'+numel(maxIndices)*(maxIndices-1)); % Get the acceleration
+
+
+
+
 
 % Below this line is old code
 %----------------------------------------------------------
