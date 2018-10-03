@@ -43,8 +43,7 @@ The master_script where all other scripts are called. Ideally, the user will onl
 |toRF_parameters|cell array|n-by-2 cell array where n is the number of fields in rasterData used to determine if the saccade in each trial was towards or away from the receptive field <br> - First column is the fieldname <br> - Second column is the value in the fieldname <br> All the values in both columns match within a trial, then it is determined that the saccade was towards the receptive field.|
 |alignmentBuffer|double|This is a buffer (in milliseconds) that is placed during smoothing to ensure that artifacts during smoothing do not enter the relevant time frames. This can typically be left as `100`.|
 |alignment_parameters|cell array|n-by-3 cell array where n is the number of events that we want to plot. <br> - First column corresponds to the fieldname that is aligned in the plot (i.e. timing for the fieldname is set as 0ms in the plot). Each trial is aligned to this time for plotting. <br> - Second column corresponds to the start of the plot in ms (i.e. the time before 0ms that we want to see) <br> - Third column corresponds to the end of the plot in ms (i.e. the time after 0ms that we want to see)|
-|error_fields|cell array|n-by-1 cell array where n is the number of error types. <br> - Column is the fieldname of the error field <br>
-If a trial has a value in any of these fieldnames, then it is discarded and not processed.|
+|error_fields|cell array|n-by-1 cell array where n is the number of error types. <br> - Column is the fieldname of the error field <br>If a trial has a value in any of these fieldnames, then it is discarded and not processed.|
 |sigma|double|The smoothing parameter to be used in the kernel. Default is `0.01`.|
 |RF_fields_to_plot|cell array|n-length cell array. <br> Each entry is a fieldName to plot. Default is `{'toRF', 'awayRF'}`. |
 |yMax|double|The height of the plots, in spikes/second.|
